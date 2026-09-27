@@ -1,0 +1,32 @@
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: glpi
+      MARIADB_DATABASE: glpi
+      MARIADB_USER: glpi
+      MARIADB_PASSWORD: glpi
+    volumes: [db:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 30
+
+  glpi:
+    image: glpi/glpi:11.0.9
+    depends_on:
+      db: {condition: service_healthy}
+    environment:
+      GLPI_DB_HOST: db
+      GLPI_DB_PORT: 3306
+      GLPI_DB_NAME: glpi
+      GLPI_DB_USER: glpi
+      GLPI_DB_PASSWORD: glpi
+    ports: ["8080:80"]
+    volumes:
+      - glpi:/var/glpi
+      - ./plugin/mlabvuln:/var/www/glpi/plugins/mlabvuln
+
+volumes:
+  db:
+  glpi:
